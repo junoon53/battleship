@@ -94,7 +94,7 @@ class Environment():
             else:
                 reward = -1
 
-        return reward
+        return reward, hit, sunk, done
 
 
     def __str__(self):

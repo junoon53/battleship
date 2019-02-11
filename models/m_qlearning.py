@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 
-class ModelRandom():
+class ModelQLearning():
     def __init__(self, name):
         """TODO: Docstring for __init__.
 
@@ -24,11 +24,11 @@ class ModelRandom():
         
             x = random.randint(0,d-1)
             y = random.randint(0,d-1)
-        
+
         reward, hit, sunk, done = env.step((x,y))
 
     
     def __str__(self):
 
-        return "%s (Random)"%(self.name)
+        return "%s (QLearning)"%(self.name)
 

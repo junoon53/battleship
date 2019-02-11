@@ -22,18 +22,21 @@ class Game(object):
             self.players.reverse()
             self.boards.reverse()
 
-
+        rounds = 1
         while True:
-
-            self.boards[0].step(self.players[1].move(self.boards[0]))
+            print("Round %d"%(rounds))
+            
+            self.players[1].move(self.boards[0])
             if self.boards[0].done == True:
                 break
-            self.boards[1].step(self.players[0].move(self.boards[1]))
+            self.players[0].move(self.boards[1])
             if self.boards[1].done == True:
                 break
 
             print(self.boards[0])
             print(self.boards[1])
+            rounds += 1
+
 
         print(self.boards[0])
         print(self.boards[1])

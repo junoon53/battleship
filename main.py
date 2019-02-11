@@ -1,5 +1,6 @@
 from game import Game
 from models.m_random import ModelRandom
+from models.m_hunt_target import ModelHuntTarget
 from environment import Environment
 
 
@@ -12,7 +13,11 @@ def main():
 
     # test()
 
-    g = Game(ModelRandom("Vikram"), ModelRandom("Betal"), Environment(10, [2,3,3,4,5], "Vikram"), Environment(10, [2,3,3,4,5], "Betal"))
+    DIM = 10
+    SHIPS = [2,3,3,4,5]
+
+    g = Game(ModelHuntTarget("Vikram"), ModelRandom("Betal"), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
+
     g.play()
 
 def test():
@@ -20,12 +25,9 @@ def test():
     model_random = m_random.ModelRandom("Vikram")
     env = Environment(10, [2,3,3,4,5], "Vikram")
 
-    reward = 0
     for i in range(90):
-        reward += env.step(model_random.move(env))
+        model_random.move(env)
 
-    print(env)
-    print(reward)
 
 if __name__ == "__main__":
     main()
