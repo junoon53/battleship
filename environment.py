@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import sys
 
 
@@ -23,33 +24,26 @@ class Environment():
 
     def _place(self):
         for n,size in enumerate(self.ships):
-
-            placed = False
-            while not placed:
-                row = np.random.randint(self.dim)
-                col = np.random.randint(self.dim)
-                if np.random.random() > 0.5:
-                    # try to place it horizontally
+            success = False
+            while not success:
+                row = random.randint(0, self.dim-1)
+                col = random.randint(0, self.dim-1)
+                if random.random() > 0.5:
                     if col + size > self.dim: 
-                        continue # off the board
-
+                        continue 
                     elif np.sum(self.placement[row, col:col+size]) > 0:
-                        continue # collision
-
+                        continue
                     self.placement[row, col:col+size] = n+1
                     self.ship_coords[n+1] = ((row,col), (1,size))
-                    placed = True
+                    success = True
                 else:
-                    # try to place it vertically
                     if row + size > self.dim:
-                        continue # off the board
-
+                        continue 
                     elif np.sum(self.placement[row:row+size, col]):
-                        continue # collision
-
+                        continue
                     self.placement[row:row+size, col] = n+1
                     self.ship_coords[n+1] = ((row,col), (size,1))
-                    placed = True
+                    success = True
 
     def step(self, guess):
         """TODO: Docstring for step.
