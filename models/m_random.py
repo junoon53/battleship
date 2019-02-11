@@ -3,14 +3,14 @@ import random
 
 
 class ModelRandom():
-    def __init__(self, arg1):
+    def __init__(self, name):
         """TODO: Docstring for __init__.
 
         :arg1: TODO
         :returns: TODO
 
         """
-        pass
+        self.name = name
 
 
     def move(self, env):
@@ -26,4 +26,9 @@ class ModelRandom():
             y = random.randint(0,d-1)
 
         return x,y
+
+    
+    def __str__(self):
+
+        return "%s (Random)"%(self.name)
 

@@ -3,11 +3,12 @@ import sys
 
 
 class Environment():
-    def __init__(self, dim, ships):
+    def __init__(self, dim, ships, name):
         """TODO: Docstring for __init__.
         :returns: TODO
 
         """
+        self.name = name
         self.shots = 0
         self.dim = dim
         self.ships = ships
@@ -36,7 +37,7 @@ class Environment():
                         continue # collision
 
                     self.placement[row, col:col+size] = n+1
-                    self.ship_coords[n+1] = ((row,col), (0,size))
+                    self.ship_coords[n+1] = ((row,col), (1,size))
                     placed = True
                 else:
                     # try to place it vertically
@@ -47,7 +48,7 @@ class Environment():
                         continue # collision
 
                     self.placement[row:row+size, col] = n+1
-                    self.ship_coords[n+1] = ((row, col), (size,0))
+                    self.ship_coords[n+1] = ((row,col), (size,1))
                     placed = True
 
     def step(self, guess):
@@ -76,8 +77,10 @@ class Environment():
                 ship_no = self.placement[x,y]
                 sunk = 1
                 pos = self.ship_coords[ship_no]
+                # print(pos)
                 for row in range(pos[0][0], pos[0][0] + pos[1][0]):
                     for col in range(pos[0][1], pos[0][1] + pos[1][1]):
+                        # print(row,col)
                         if self.hits[row,col] == 0:
                             sunk = 0
                 if sunk == 1:
@@ -86,7 +89,7 @@ class Environment():
                 
                     # update game_state
                     if self.num_sunk == len(self.ship_coords):
-                        done = 1
+                        self.done = 1
                         reward = 100
             else:
                 reward = -1
@@ -95,7 +98,7 @@ class Environment():
 
 
     def __str__(self):
-        result = '\n\n'
+        result = '\n%s\n'%(self.name)
         result += "Shots %d Sunk %d Left %d\n"%(self.shots, self.num_sunk, len(self.ship_coords) - self.num_sunk)
         result += "-------------------\n"
         for row in range(self.dim):
