@@ -3,7 +3,7 @@ import random
 
 
 class ModelRandom():
-    def __init__(self, name):
+    def __init__(self, name, dim):
         """TODO: Docstring for __init__.
 
         :arg1: TODO
@@ -11,21 +11,30 @@ class ModelRandom():
 
         """
         self.name = name
+        self.dim = dim
+
+    def remember(self, state, action, reward, next_state):
+        """TODO: Docstring for remember.
+        :returns: TODO
+
+        """
+
+    def replay(self, batch_size):
+        """TODO: Docstring for replay.
+        :returns: TODO
+
+        """
+        pass
 
 
-    def move(self, env):
+    def move(self, state):
 
-        d = env.dim
+        d = self.dim
 
         x = random.randint(0,d-1)
         y = random.randint(0,d-1)
 
-        while env.guesses[x,y] == 1:
-        
-            x = random.randint(0,d-1)
-            y = random.randint(0,d-1)
-        
-        reward, hit, sunk, done = env.step((x,y))
+        return x,y
 
     
     def __str__(self):

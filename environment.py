@@ -1,6 +1,5 @@
 import numpy as np
 import random
-import sys
 
 
 class Environment():
@@ -17,8 +16,7 @@ class Environment():
         self.ship_coords = {}
         self.placement = np.zeros([dim, dim], dtype=int)
         self.guesses = np.zeros([dim, dim], dtype=int)
-        self.hits = np.zeros([dim, dim], dtype=int)
-        self.done = 0
+        self.done = False
 
         self._place()
 
@@ -28,10 +26,10 @@ class Environment():
             while not success:
                 row = random.randint(0, self.dim-1)
                 col = random.randint(0, self.dim-1)
-                if random.random() > 0.5:
+                if random.randint(0,1) == 0: 
                     if col + size > self.dim: 
                         continue 
-                    elif np.sum(self.placement[row, col:col+size]) > 0:
+                    if np.sum(self.placement[row, col:col+size]) > 0:
                         continue
                     self.placement[row, col:col+size] = n+1
                     self.ship_coords[n+1] = ((row,col), (1,size))
@@ -45,6 +43,29 @@ class Environment():
                     self.ship_coords[n+1] = ((row,col), (size,1))
                     success = True
 
+    def reset(self):
+        """TODO: Docstring for reset.
+
+        :returns: TODO
+
+        """
+        dim = self.dim
+        self.shots = 0
+        self.num_sunk = 0
+        self.ship_coords = {}
+        self.placement = np.zeros([dim, dim], dtype=int)
+        self.guesses = np.zeros([dim, dim], dtype=int)
+        self.done = False
+
+        self._place()
+    
+    def get_state(self):
+        """TODO: Docstring for get_state.
+        :returns: TODO
+
+        """
+        return self.guesses, np.bitwise_and(self.guesses, self.placement), 0, 0, self.done
+
     def step(self, guess):
         """TODO: Docstring for step.
 
@@ -53,9 +74,9 @@ class Environment():
 
         """
 
-        reward = 0
+        reward = -1
         x,y = guess
-        hit, sunk, done = 0,0,0
+        hit, sunk = False, False
 
         # update guesses
         if self.guesses[x,y] == 0:
@@ -64,31 +85,28 @@ class Environment():
 
             # update hits
             if self.placement[x,y] > 0:
-                self.hits[x,y] = 1
                 reward = 1
-                hit = 1
+                hit = True
                 # update sunk
                 ship_no = self.placement[x,y]
-                sunk = 1
+                sunk = True
                 pos = self.ship_coords[ship_no]
                 # print(pos)
                 for row in range(pos[0][0], pos[0][0] + pos[1][0]):
                     for col in range(pos[0][1], pos[0][1] + pos[1][1]):
                         # print(row,col)
-                        if self.hits[row,col] == 0:
-                            sunk = 0
-                if sunk == 1:
+                        if self.guesses[row,col] == 0:
+                            sunk = False
+                if sunk == True:
                     reward = 10 
                     self.num_sunk += 1
                 
                     # update game_state
-                    if self.num_sunk == len(self.ship_coords):
-                        self.done = 1
+                    self.done =  (self.num_sunk == len(self.ship_coords))
+                    if self.done:
                         reward = 100
-            else:
-                reward = -1
 
-        return reward, hit, sunk, done
+        return reward, (self.guesses, np.bitwise_and(self.guesses, self.placement), hit, sunk, self.done)
 
 
     def __str__(self):
@@ -97,8 +115,8 @@ class Environment():
         result += "-------------------\n"
         for row in range(self.dim):
             for col in range(self.dim):
-                if self.placement[row,col] and self.hits[row,col]:
-                    result +='☀ '
+                if self.placement[row,col] and self.guesses[row,col]:
+                    result += '★ '
                 elif self.placement[row,col]:
                     result += '%d '%(self.placement[row,col])
                 elif self.guesses[row,col]:
