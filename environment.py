@@ -64,7 +64,8 @@ class Environment():
         :returns: TODO
 
         """
-        return self.guesses, np.bitwise_and(self.guesses, self.placement), 0, 0, self.done
+        hits = np.bitwise_and(self.guesses, (self.placement > 0).astype(int))
+        return self.guesses, hits, 0, 0, self.done
 
     def step(self, guess):
         """TODO: Docstring for step.
@@ -105,8 +106,15 @@ class Environment():
                     self.done =  (self.num_sunk == len(self.ship_coords))
                     if self.done:
                         reward = 100
-
-        return reward, (self.guesses, np.bitwise_and(self.guesses, self.placement), hit, sunk, self.done)
+        
+        hits = np.bitwise_and(self.guesses, (self.placement > 0).astype(int))
+        # print('placement')
+        # print(self.placement)
+        # print('guesses')
+        # print(self.guesses)
+        # print('hits')
+        # print(hits)
+        return reward, (self.guesses, hits, hit, sunk, self.done)
 
 
     def __str__(self):
