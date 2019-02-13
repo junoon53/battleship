@@ -65,7 +65,7 @@ class Environment():
 
         """
         hits = np.bitwise_and(self.guesses, (self.placement > 0).astype(int))
-        return self.guesses, hits, 0, 0, self.done
+        return self.guesses.copy(), hits, 0, 0, self.done
 
     def step(self, guess):
         """TODO: Docstring for step.
@@ -114,7 +114,7 @@ class Environment():
         # print(self.guesses)
         # print('hits')
         # print(hits)
-        return reward, (self.guesses, hits, hit, sunk, self.done)
+        return reward, (self.guesses.copy(), hits, hit, sunk, self.done)
 
 
     def __str__(self):

@@ -1,4 +1,5 @@
 import torch
+import copy
 from game import Game
 from models.m_random import ModelRandom
 from models.m_hunt_target import ModelHuntTarget

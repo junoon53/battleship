@@ -24,7 +24,7 @@ class ModelQLearning(nn.Module):
 
         self.experiences = deque(maxlen=2000)
         self.gamma = 0.9 
-        self.epsilon = 0.0
+        self.epsilon = 1.0
         self.epsilon_min = 0.01 
         self.epsilon_decay = 0.9995
         self.learning_rate = 0.001
@@ -112,10 +112,11 @@ class ModelQLearning(nn.Module):
 
             action_idx = action[0]*self.dim + action[1]
             guesses, hits,_,_,_ = state
-            # print('guesses')
-            # print(guesses)
-            # print('hits')
-            # print(hits)
+            print ("replay")
+            print('guesses')
+            print(guesses)
+            print('hits')
+            print(hits)
             inputs = np.zeros((1, 2, self.dim, self.dim))
             inputs[0, 0, :] = guesses
             inputs[0, 1, :] = hits
