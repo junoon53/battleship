@@ -27,8 +27,8 @@ def main():
 
     # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
 
-    # train_Convnet(DIM, SHIPS)
-    train_RL(DIM, SHIPS)
+    train_Convnet(DIM, SHIPS)
+    # train_RL(DIM, SHIPS)
 
 
 def tournament(players):
