@@ -11,19 +11,15 @@ import random
 class ModelQLearning(nn.Module):
     def __init__(self, name, dim, num_ships):
         super(ModelQLearning, self).__init__() 
-        """TODO: Docstring for __init__.
-
-        :arg1: TODO
-        :returns: TODO
-
+        """Initialize the QLearning Model
         """
         self.name = name
         self.dim = dim
 
 ## DQN Parameters
 
-        self.gamma = 0.10
-        self.epsilon = 1.0
+        self.gamma = 0.50
+        self.epsilon = 0.0
         self.epsilon_min = 0.01 
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
@@ -53,6 +49,9 @@ class ModelQLearning(nn.Module):
         return self.fc(x.view(x.size(0), -1))
 
     def move(self, state):
+        """ Obtain the next action 
+        :returns: Tuple of x,y coordinates
+        """
 
         d = self.dim
 
@@ -99,7 +98,7 @@ class ModelQLearning(nn.Module):
         discounted_rewards = self.calc_rewards(hits, total_ships_lengths)
 
         if self.optimizer == None: 
-             self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate) 
+             self.optimizer = torch.optim.Adam(self.parameters(), lr = 0.0001) 
 
         self.train()
         for inputs, action, reward in zip(inputs, actions, discounted_rewards):

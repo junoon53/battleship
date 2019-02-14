@@ -91,7 +91,6 @@ class Environment():
             for i in range(0, len(self.ships)):
                 if self.placement[i,x,y] == 1:
                     self.state[0,x,y] = 1
-                    self.state[i+1,x,y] = 1
                     reward = 1
                     hit = True
                     # update sunk
@@ -107,6 +106,7 @@ class Environment():
                         # print('sunk')
                         reward = 1 
                         self.num_sunk += 1
+                        self.state[i+1,:,:] = 1
                     
                         # update game_state
                         self.done =  (self.num_sunk == len(self.ship_coords))
@@ -131,7 +131,7 @@ class Environment():
             for col in range(self.dim):
                 if self.state[0,row,col] == 1:
                     result += '★ '
-                elif np.sum(self.state[:,row,col]) > 0:
+                elif np.sum(self.placement[:,row,col]) > 0:
                    result += 'S '
                 elif self.state[0,row,col] == -1:
                     result += 'X '    
