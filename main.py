@@ -21,12 +21,12 @@ def main():
     DIM = 5
     SHIPS = [2,2]
 
-    # g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
-    # g.play()
+    g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
+    g.play()
 
     # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
 
-    train(DIM, SHIPS)
+    # train(DIM, SHIPS)
 
 
 def tournament(players):
