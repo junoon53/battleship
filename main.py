@@ -57,12 +57,7 @@ def train(DIM, SHIPS):
     env = Environment(DIM, SHIPS, "Vikram")
     batch_size = 64
     num_episodes = 90000
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    if torch.cuda.is_available():
-        print("using gpu")
-
-    agent.to(device) 
     total_moves = 0
 
     for e in range(num_episodes):
@@ -71,16 +66,18 @@ def train(DIM, SHIPS):
         inputs = []
         actions = []
         hits = []
-        for time in range(500):
+        done = False
+        for time in range(DIM*DIM):
             action = agent.move(state)
             reward, next_state = env.step(action)
             next_input, open_locations, hit, sunk, done = next_state
             if done == True:
-                # print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
                 total_moves += len(hits)
                 if e % batch_size == 0 and e != 0:
-                    print(e,float(total_moves)/float(batch_size))
+                    print("Episodes: {}, Avg Moves: {}".format(e,float(total_moves)/float(batch_size)))
                     total_moves = 0
+
+                agent.replay(inputs, actions, hits, env.total_ships_lengths)
                 break
 
             inputs.append(next_input)
@@ -88,7 +85,11 @@ def train(DIM, SHIPS):
             hits.append(hit)
             state = next_state
 
-        agent.replay(inputs, actions, hits, env.total_ships_lengths)
+        if done == False:
+            print(env.placement)
+            print(inputs,actions, hits)
+            # break
+
 
 def test():
 

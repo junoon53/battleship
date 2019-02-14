@@ -18,11 +18,12 @@ class ModelQLearning(nn.Module):
 
 ## DQN Parameters
 
-        self.gamma = 0.50
+        self.alpha = 0.001
+        self.gamma = 0.1
         self.epsilon = 0.0
         self.epsilon_min = 0.01 
         self.epsilon_decay = 0.995
-        self.learning_rate = 0.001
+        self.learning_rate = 0.0005
 
 ## Q-Function Model
 
@@ -34,8 +35,14 @@ class ModelQLearning(nn.Module):
         self.bn3 = nn.BatchNorm2d(num_ships+1)
         self.fc = nn.Linear(dim*dim*(num_ships+1), dim*dim) 
 
-        self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = None 
+        # torch.nn.init.xavier_uniform_(self.conv1.weight)
+        # torch.nn.init.xavier_uniform_(self.conv2.weight)
+        # torch.nn.init.xavier_uniform_(self.conv3.weight)
+        # torch.nn.init.xavier_uniform_(self.fc.weight)
+
+        self.softmax = nn.LogSoftmax()
+
+        self.criterion = nn.NLLLoss()
         
     def forward(self, x):
         """Calculate the forward pass
@@ -43,10 +50,15 @@ class ModelQLearning(nn.Module):
 
         """
         x = F.relu(self.bn1(self.conv1(x)))
+        # print(x.shape)
         x = F.relu(self.bn2(self.conv2(x)))
+        # print(x.shape)
         x = F.relu(self.bn3(self.conv3(x)))
+        # print(x.shape)
 
-        return self.fc(x.view(x.size(0), -1))
+        logits = self.fc(x.view(x.size(0), -1)) 
+
+        return logits, self.softmax(logits)
 
     def move(self, state):
         """ Obtain the next action 
@@ -66,8 +78,9 @@ class ModelQLearning(nn.Module):
 
             self.eval()
             inputs = torch.Tensor(inputs).unsqueeze(0)
-            preds = F.softmax(self.forward(inputs))[0].detach().numpy() + np.random.random(d*d)*1e-8
-            max_idx = np.argmax(np.multiply(preds , open_locations))
+            logits, logprobs = self.forward(inputs)
+            logprobs = logprobs[0].detach().numpy() # + np.random.random(d*d)*1e-8
+            max_idx = np.argmax(logprobs + open_locations*1e25)
             x,y = divmod(max_idx.item(),d)
 
         return x,y
@@ -95,24 +108,23 @@ class ModelQLearning(nn.Module):
 
         discounted_rewards = self.calc_rewards(hits, total_ships_lengths)
 
-        if self.optimizer == None: 
-             self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate) 
-
+        optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, weight_decay=0.0001) 
         self.train()
         for inputs, action, reward in zip(inputs, actions, discounted_rewards):
             action_idx = action[0]*self.dim + action[1]
             inputs = torch.Tensor(inputs).unsqueeze(0)
+            optimizer.zero_grad()
+            logits, logprobs = self.forward(inputs)
+            lr = reward*self.alpha
+            # print(lr)
 
-            for g in self.optimizer.param_groups:
-                g['lr'] = reward*self.learning_rate
+            loss = lr*self.criterion(logprobs, torch.LongTensor([action_idx]))
 
-            self.optimizer.zero_grad()
-
-            loss = self.criterion(self.forward(inputs), torch.LongTensor([action_idx]))
+            # print(loss)
 
             loss.backward()
 
-            self.optimizer.step()
+            optimizer.step()
 
 ## decay epsilon
         if self.epsilon > self.epsilon_min:

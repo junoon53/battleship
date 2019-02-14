@@ -7,17 +7,18 @@ class Environment():
         """Docstring for __init__.
 
         """
-        self.name = name
-        self.shots = 0
         self.dim = dim
+        self.name = name
         self.ships = ships
+        self.total_ships_lengths = sum(ships)
+
+        self.shots = 0
         self.num_sunk = 0
         self.ship_coords = {}
-        self.state = np.zeros([len(ships)+1, dim, dim], dtype='long')
+        self.state = np.zeros([len(ships)+1, dim, dim], dtype='float32')
         self.placement = np.zeros([len(ships), dim, dim], dtype=int)
         self.open_locations = np.full([dim, dim], 1, 'float32')
         self.done = False
-        self.total_ships_lengths = sum(ships)
 
         self._place()
 
@@ -50,6 +51,7 @@ class Environment():
         """Resets the environment
         """
         dim = self.dim
+
         self.shots = 0
         self.num_sunk = 0
         self.ship_coords = {}
@@ -77,7 +79,7 @@ class Environment():
         x,y = guess
         hit, sunk = 0, 0
 
-        assert(self.state[0,x,y] == 0)
+        # assert(self.state[0,x,y] == 0)
 
         # update guesses
         if self.state[0,x,y] == 0:
