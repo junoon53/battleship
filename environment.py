@@ -21,8 +21,6 @@ class Environment():
 
         self._place()
 
-        # print(self.placement)
-
     def _place(self):
         ''' Places ships on the grid
         '''
@@ -96,18 +94,14 @@ class Environment():
                     # update sunk
                     sunk = 1
                     pos = self.ship_coords[i]
-                    # print(pos)
                     for row in range(pos[0][0], pos[0][0] + pos[1][0]):
                         for col in range(pos[0][1], pos[0][1] + pos[1][1]):
-                            # print(row,col, self.state[0,row,col])
                             if self.state[0,row,col] == 0:
                                 sunk = 0
                     if sunk == 1:
                         reward = 1 
                         self.num_sunk += 1
                         self.state[i+1,:,:] = 1
-                        # print('sunk', self.num_sunk)
-                        # print(self.state)
                     
                         # update game_state
                         self.done =  (self.num_sunk == len(self.ship_coords))

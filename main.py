@@ -75,8 +75,6 @@ def train(DIM, SHIPS):
             action = agent.move(state)
             reward, next_state = env.step(action)
             next_input, open_locations, hit, sunk, done = next_state
-            # print(next_input)
-            # print('---')
             if done == True:
                 # print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
                 total_moves += len(hits)
@@ -89,8 +87,7 @@ def train(DIM, SHIPS):
             actions.append(action)
             hits.append(hit)
             state = next_state
-        # if len(agent.experiences) > batch_size:
-        # print('replaying...')
+
         agent.replay(inputs, actions, hits, env.total_ships_lengths)
 
 def test():

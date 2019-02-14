@@ -67,19 +67,13 @@ class ModelQLearning(nn.Module):
             self.eval()
             inputs = torch.Tensor(inputs).unsqueeze(0)
             preds = F.softmax(self.forward(inputs))[0].detach().numpy() + np.random.random(d*d)*1e-8
-            # print(preds)
-            # print(open_locations)
-            # print(preds)
             max_idx = np.argmax(np.multiply(preds , open_locations))
             x,y = divmod(max_idx.item(),d)
-            # print(x,y)
-            # print('----')
 
         return x,y
 
     def calc_rewards(self, hits, total_ships_lengths):
         ''' Calculate the discounted sume of rewards over an episode '''
-        # print(len(hits), total_ships_lengths)
 
         gamma = self.gamma
         board_size = self.dim**2
