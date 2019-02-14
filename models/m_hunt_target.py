@@ -3,7 +3,7 @@ import random
 
 
 class ModelHuntTarget():
-    def __init__(self, name, dim):
+    def __init__(self, name, dim, num_ships, device):
         """Initialize the ModelHuntTarget class.
         """
         self.name = name

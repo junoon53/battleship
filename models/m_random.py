@@ -3,7 +3,7 @@ import random
 
 
 class ModelRandom():
-    def __init__(self, name, dim):
+    def __init__(self, name, dim, num_ships, device):
         """TODO: Docstring for __init__.
 
         :arg1: TODO

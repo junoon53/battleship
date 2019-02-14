@@ -22,13 +22,16 @@ def main():
     DIM = 10
     SHIPS = [2,3,3,4,5]
 
-    # g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
-    # g.play()
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
+    model = train_Convnet(DIM, SHIPS, device)
+    torch.save(model.state_dict(),'./saved_models/convenet.torch' )
 
-    train_Convnet(DIM, SHIPS)
-    # train_RL(DIM, SHIPS)
+    conv_model = ModelConvnet("Vikram", DIM, len(SHIPS), device).to(device)
+    conv_model.load_state_dict(torch.load('./saved_models/convenet.torch'))
+
+    g = Game(conv_model, ModelRandom("Betal", DIM, len(SHIPS), device), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
+    g.play()
 
 
 def tournament(players):
@@ -50,17 +53,16 @@ def tournament(players):
 
     print("%s wins the tournament"%(winners[0]))
 
-def train_Convnet(DIM, SHIPS):
+def train_Convnet(DIM, SHIPS, device):
     """Train a convnet model.
     :returns: None
 
     """
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     agent = ModelConvnet("Vikram", DIM, len(SHIPS), device)
     agent.to(device)
     env = Environment(DIM, SHIPS, "Vikram")
     batch_size = 1024
-    num_episodes = 90000
+    num_episodes = 1000
     max_running_avg = 64
 
     batch = 0
@@ -106,6 +108,7 @@ def train_Convnet(DIM, SHIPS):
             print(inputs,actions, hits)
             # break
 
+    return agent
 
 def test():
 
@@ -124,7 +127,7 @@ def train_RL(DIM, SHIPS):
     agent = ModelQLearning("Vikram", DIM, len(SHIPS), device)
     env = Environment(DIM, SHIPS, "Vikram")
     batch_size = 64
-    num_episodes = 90000
+    num_episodes = 100
 
 
     total_moves = 0

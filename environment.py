@@ -88,10 +88,10 @@ class Environment():
         hit, sunk = 0, 0
 
         # assert(self.state[0,x,y] == 0)
+        self.shots += 1
 
         # update guesses
         if self.state[0,x,y] == 0:
-            self.shots += 1
             self.state[0,x,y] = -1
             self.open_locations[x,y] = 0
 
