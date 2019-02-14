@@ -23,19 +23,19 @@ class ModelQLearning(nn.Module):
 ## DQN Parameters
 
         self.experiences = deque(maxlen=2000)
-        self.gamma = 0.9 
-        self.epsilon = 1.0
+        self.gamma = 0.5 
+        self.epsilon = 0.0
         self.epsilon_min = 0.01 
         self.epsilon_decay = 0.9995
-        self.learning_rate = 0.001
+        self.learning_rate = 0.0005
 
 ## Q-Function Model
 
-        self.conv1 = nn.Conv2d(2, 64, kernel_size=3, stride=1)
-        self.bn1 = nn.BatchNorm2d(64)
-        self.conv2 = nn.Conv2d(64, 32, kernel_size=3, stride=1)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 3, kernel_size=1, stride=1)
+        self.conv1 = nn.Conv2d(2, 32, kernel_size=3, stride=1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.conv3 = nn.Conv2d(64, 3, kernel_size=1, stride=1)
         self.bn3 = nn.BatchNorm2d(3)
 
         def calc_conv_size(size, kernel_size = 3, stride = 1):
@@ -45,7 +45,7 @@ class ModelQLearning(nn.Module):
 
         linear_input_size = convd * convd * 3
 
-        # print(convd, linear_input_size)
+        print(convd, linear_input_size)
 
         self.fc = nn.Linear(linear_input_size, dim*dim) 
 
@@ -111,12 +111,14 @@ class ModelQLearning(nn.Module):
         for state, action, reward, next_state in minibatch:
 
             action_idx = action[0]*self.dim + action[1]
+
             guesses, hits,_,_,_ = state
-            print ("replay")
-            print('guesses')
-            print(guesses)
-            print('hits')
-            print(hits)
+            # closed_positions = guesses.flatten() * (-1001)
+            # print ("replay", action, reward)
+            # print('guesses')
+            # print(guesses)
+            # print('hits')
+            # print(hits)
             inputs = np.zeros((1, 2, self.dim, self.dim))
             inputs[0, 0, :] = guesses
             inputs[0, 1, :] = hits
@@ -124,7 +126,12 @@ class ModelQLearning(nn.Module):
             inputs = inputs.to('cuda')
             
             next_guesses, next_hits, hit, sunk, done = next_state
+            next_closed_positions = next_guesses.flatten() * (-1001)
             next_inputs = np.zeros((1, 2, self.dim, self.dim))
+            # print('next guesses')
+            # print(next_guesses)
+            # print('next hits')
+            # print(next_hits)
             next_inputs[0, 0, :] = next_guesses
             next_inputs[0, 1, :] = next_hits
             next_inputs = torch.Tensor(next_inputs)
@@ -135,18 +142,25 @@ class ModelQLearning(nn.Module):
             self.eval()
             if not done:
                 probs = self.forward(next_inputs)
-                probs_max,_ = torch.max(probs[0], 0)
+                # print('probs')
+                # print(probs)
+                probs_max = np.max(next_closed_positions + probs[0].detach().cpu().numpy(), 0)
+                # probs_max,_ = torch.max(probs[0], 0)
                 label = reward + self.gamma * probs_max
+                # print('label', label)
 
 ## calculate the labels
             labels = self.forward(inputs)
             labels[0, action_idx] = label
+            # print('labels')
+            # print(labels)
 
 ## update Q(s,a) using gradient descent
             self.train()
             self.optimizer.zero_grad()
 
-            loss = self.criterion(self.forward(inputs), labels)
+            # loss = self.criterion(self.forward(inputs), labels)
+            loss = F.smooth_l1_loss(self.forward(inputs), labels)
             # print(loss)
             loss.backward()
             self.optimizer.step()

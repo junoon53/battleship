@@ -28,7 +28,7 @@ class Game(object):
 
             action = self.players[1].move(states[0])
             reward, state = self.boards[0].step(action)
-            guesses, hits, hit, sunk, done = state
+            x, hit, sunk, done = state
             self.players[1].remember(states[0], action, reward, state)
             states[0] = state
 
@@ -41,7 +41,7 @@ class Game(object):
 
             action = self.players[0].move(states[1])
             reward, state = self.boards[1].step(action)
-            guesses, hits, hit, sunk, done = state
+            x, hit, sunk, done = state
             self.players[0].remember(states[1], action, reward, state)
             states[1] = state
 

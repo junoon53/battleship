@@ -51,7 +51,7 @@ class ModelHuntTarget():
 
     def move(self, state):
 
-        guesses, hits, hit, sunk, done = state
+        state, hit, sunk, done = state
 
         if self.mode == 0:
 

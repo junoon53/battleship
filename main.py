@@ -20,12 +20,12 @@ def main():
     DIM = 6
     SHIPS = [3,3,3]
 
-    # g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
-    # g.play()
+    g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
+    g.play()
 
     # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
 
-    train(DIM, SHIPS)
+    # train(DIM, SHIPS)
 
 
 def tournament(players):
@@ -55,7 +55,7 @@ def train(DIM, SHIPS):
     """
     agent = ModelQLearning("Vikram", DIM)
     env = Environment(DIM, SHIPS, "Vikram")
-    batch_size = 32
+    batch_size = 64
     num_episodes = 1000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
