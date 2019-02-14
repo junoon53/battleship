@@ -1,4 +1,5 @@
 import torch
+from collections import deque
 import copy
 from game import Game
 from models.m_random import ModelRandom
@@ -9,23 +10,23 @@ from environment import Environment
 
 
 def main():
-    """TODO: Docstring for main.
+    """Entry point of the application.
 
-    :returns: TODO
+    :returns: None
 
     """
 
     # test()
 
-    DIM = 6
-    SHIPS = [3,3,3]
+    DIM = 5
+    SHIPS = [2,2]
 
-    g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
-    g.play()
+    # g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
+    # g.play()
 
     # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
 
-    # train(DIM, SHIPS)
+    train(DIM, SHIPS)
 
 
 def tournament(players):
@@ -47,43 +48,48 @@ def tournament(players):
 
     print("%s wins the tournament"%(winners[0]))
 
-
 def train(DIM, SHIPS):
-    """TODO: Docstring for train.
-    :returns: TODO
+    """Train a Q-Learning model.
+    :returns: None
 
     """
-    agent = ModelQLearning("Vikram", DIM)
+    agent = ModelQLearning("Vikram", DIM, len(SHIPS))
     env = Environment(DIM, SHIPS, "Vikram")
     batch_size = 64
-    num_episodes = 1000
+    num_episodes = 90000
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if torch.cuda.is_available():
         print("using gpu")
 
     agent.to(device) 
-
+    total_moves = 0
 
     for e in range(num_episodes):
         env.reset()
         state = env.get_state()
+        inputs = []
+        actions = []
+        hits = []
         for time in range(500):
             action = agent.move(state)
             reward, next_state = env.step(action)
-            _,_, _, _, done = next_state
-            agent.remember(state, action, reward, next_state)
+            next_input, hit, sunk, done = next_state
+            inputs.append(next_input)
+            actions.append(action)
+            hits.append(hit)
             state = next_state
-            # print(time, action, reward, agent.epsilon, end="\r")
-
             if done == True:
-                print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
+                # print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
+                total_moves += len(hits)
+                if e % 50 == 0 and e != 0:
+                    print(e,float(total_moves)/float(50))
+                    total_moves = 0
                 break
 
-            if len(agent.experiences) > batch_size:
-                agent.replay(batch_size)
-
-        # print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
+        # if len(agent.experiences) > batch_size:
+        # print('replaying...')
+        agent.replay(inputs, actions, hits, env.total_ships_lengths)
 
 def test():
 

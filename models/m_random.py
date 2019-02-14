@@ -13,19 +13,6 @@ class ModelRandom():
         self.name = name
         self.dim = dim
 
-    def remember(self, state, action, reward, next_state):
-        """TODO: Docstring for remember.
-        :returns: TODO
-
-        """
-
-    def replay(self, batch_size):
-        """TODO: Docstring for replay.
-        :returns: TODO
-
-        """
-        pass
-
 
     def move(self, state):
 

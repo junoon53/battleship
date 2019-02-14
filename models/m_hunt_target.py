@@ -4,11 +4,7 @@ import random
 
 class ModelHuntTarget():
     def __init__(self, name, dim):
-        """TODO: Docstring for __init__.
-
-        :arg1: TODO
-        :returns: TODO
-
+        """Initialize the ModelHuntTarget class.
         """
         self.name = name
         self.dim = dim
@@ -16,23 +12,8 @@ class ModelHuntTarget():
         self.first_hit = None
         self.last_hit = None
         self.last_action = None
-        self.orientation = 0 # 0=horizontal, 1=vertical
         self.radius = 1
         self.target_idx = 0
-
-    def remember(self, state, action, reward, next_state):
-        """TODO: Docstring for remember.
-        :returns: TODO
-
-        """
-        pass
-
-    def replay(self, batch_size):
-        """TODO: Docstring for replay.
-        :returns: TODO
-
-        """
-        pass
 
     def target(self):
 
