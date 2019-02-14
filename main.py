@@ -18,8 +18,8 @@ def main():
 
     # test()
 
-    DIM = 5
-    SHIPS = [2,2]
+    DIM = 10
+    SHIPS = [2,3,3,4,5]
 
     # g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
     # g.play()

@@ -19,7 +19,7 @@ class ModelQLearning(nn.Module):
 ## DQN Parameters
 
         self.alpha = 0.001
-        self.gamma = 0.1
+        self.gamma = 0.2
         self.epsilon = 0.0
         self.epsilon_min = 0.01 
         self.epsilon_decay = 0.995
