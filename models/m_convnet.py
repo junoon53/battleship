@@ -9,25 +9,20 @@ import random
 
 
 class ModelConvnet(nn.Module):
-    def __init__(self, name, dim, num_ships):
+    def __init__(self, name, dim, num_ships, device):
         super(ModelConvnet, self).__init__() 
         """Initialize the Convnet Model
         """
+
+        self.device = device
+
         self.name = name
         self.dim = dim
 
-## DQN Parameters
-
-        self.alpha = 0.001
-        self.gamma = 0.99
         self.epsilon = 0.0
-        self.epsilon_min = 0.01 
-        self.epsilon_decay = 0.995
-        self.learning_rate = 0.0005
+        self.learning_rate = 0.01
 
-## Q-Function Model
-
-        self.conv1 = nn.Conv2d(num_ships+1, 32, kernel_size=3, stride=1,padding=1)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1,padding=1)
         self.bn1 = nn.BatchNorm2d(32)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
         self.bn2 = nn.BatchNorm2d(64)
@@ -45,11 +40,8 @@ class ModelConvnet(nn.Module):
 
         """
         x = F.relu(self.bn1(self.conv1(x)))
-        # print(x.shape)
         x = F.relu(self.bn2(self.conv2(x)))
-        # print(x.shape)
         x = F.relu(self.bn3(self.conv3(x)))
-        # print(x.shape)
 
         logits = self.fc(x.view(x.size(0), -1)) 
 
@@ -64,47 +56,42 @@ class ModelConvnet(nn.Module):
         inputs,open_locations,_,_,_ = state
         open_locations = open_locations.flatten()
 
-        if np.random.rand() <= self.epsilon:
-
-            idx = random.choice([ i for i in range(d*d) if open_locations[i] == 1 ]) 
-            x,y = divmod(idx,d)
-
-        else:
-
-            self.eval()
-            inputs = torch.Tensor(inputs).unsqueeze(0)
-            logits, logprobs = self.forward(inputs)
-            logprobs = logprobs[0].detach().numpy() # + np.random.random(d*d)*1e-8
-            max_idx = np.argmax(logprobs + open_locations*1e25)
-            x,y = divmod(max_idx.item(),d)
+        self.eval()
+        inputs = inputs[[0], :, :]
+        inputs = torch.Tensor(inputs).unsqueeze(0).to(self.device)
+        logits, logprobs = self.forward(inputs)
+        logprobs = logprobs[0].detach().cpu().numpy() # + np.random.random(d*d)*1e-8
+        max_idx = np.argmax(logprobs + open_locations*1e5)
+        x,y = divmod(max_idx.item(),d)
 
         return x,y
 
     def replay(self, inputs, labels):
         ''' Replay an episode and train the model '''
 
-        optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, weight_decay=0.0001) 
+        optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, weight_decay=0.000) 
         batch_size = len(inputs)
-        minibatch_size = 64
+        minibatch_size = 128
         samples = 0
 
         self.train()
 
-        while samples < batch_size:
+        while samples < 10*batch_size:
 
                 samples += minibatch_size
                 idxs = np.random.randint(0, 1024, [minibatch_size])
                 
-                input_batch = inputs[idxs, :, :, :]
-                label_batch = labels[idxs, :, :]
-                input = torch.Tensor(input_batch)
-                labels = torch.Tensor(label_batch)
+                input_mbatch = inputs[idxs, :, :]
+                label_mbatch = labels[idxs, :, :].reshape([minibatch_size, -1])
+
+                input_mbatch = torch.Tensor(input_mbatch).to(self.device)
+                label_mbatch = torch.Tensor(label_mbatch).to(self.device)
+
                 optimizer.zero_grad()
-                logits, logprobs = self.forward(input)
-                loss =  torch.mean(torch.sum(- labels * logprobs, 2))
+                logits, logprobs = self.forward(input_mbatch)
+                loss =  torch.mean(torch.sum(- label_mbatch * logprobs, 1))
 
                 loss.backward()
-
                 optimizer.step()
 
     def __str__(self):

@@ -9,7 +9,7 @@ import random
 
 
 class ModelQLearning(nn.Module):
-    def __init__(self, name, dim, num_ships):
+    def __init__(self, name, dim, num_ships, device):
         super(ModelQLearning, self).__init__() 
         """Initialize the QLearning Model
         """

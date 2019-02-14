@@ -55,43 +55,50 @@ def train_Convnet(DIM, SHIPS):
     :returns: None
 
     """
-    agent = ModelConvnet("Vikram", DIM, len(SHIPS))
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    agent = ModelConvnet("Vikram", DIM, len(SHIPS), device)
+    agent.to(device)
     env = Environment(DIM, SHIPS, "Vikram")
     batch_size = 1024
     num_episodes = 90000
+    max_running_avg = 64
 
+    batch = 0
     total_moves = 0
 
-    inputs = np.empty([batch_size, len(SHIPS)+1, DIM, DIM])
+    inputs = np.empty([batch_size, 1, DIM, DIM])
     labels = np.empty([batch_size, DIM, DIM])
 
     for e in range(num_episodes):
         env.reset()
         state = env.get_state()
         done = False
-        batch = 0
-        total_moves = 0
+        episode_moves = 0
 
         for time in range(DIM*DIM):
             action = agent.move(state)
-            total_moves += 1
+            episode_moves += 1
             reward, next_state = env.step(action)
             next_input, open_locations, hit, sunk, done = next_state
-            inputs[batch, :, :, :] = next_input
+            inputs[batch, :, :] = next_input[0, :, :]
             labels[batch, :, :] = env.get_ground_truth()
 
             if done == True:
-                if e % batch_size == 0 and e != 0:
-                    print("Episodes: {}, Avg Moves: {}".format(e,float(total_moves)/float(batch_size)))
+                total_moves += episode_moves
+                episode_moves = 0
+                if e % max_running_avg == 0 and e != 0:
+                    print("Episodes: {}, Avg Moves: {}".format(e,float(total_moves)/float(max_running_avg)))
                     total_moves = 0
 
                 break
             
+           
+            batch += 1
+
             if batch == batch_size:
                 agent.replay(inputs, labels)
                 batch = 0
-            
-            batch += 1
+ 
             state = next_state
 
         if done == False:
@@ -113,10 +120,12 @@ def train_RL(DIM, SHIPS):
     :returns: None
 
     """
-    agent = ModelQLearning("Vikram", DIM, len(SHIPS))
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    agent = ModelQLearning("Vikram", DIM, len(SHIPS), device)
     env = Environment(DIM, SHIPS, "Vikram")
     batch_size = 64
     num_episodes = 90000
+
 
     total_moves = 0
 
