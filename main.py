@@ -1,10 +1,11 @@
 import torch
+import numpy as np
 from collections import deque
 import copy
 from game import Game
 from models.m_random import ModelRandom
 from models.m_hunt_target import ModelHuntTarget
-# from models.m_regression import ModelRegression
+from models.m_convnet import ModelConvnet
 from models.m_qlearning import ModelQLearning
 from environment import Environment
 
@@ -26,7 +27,8 @@ def main():
 
     # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
 
-    train(DIM, SHIPS)
+    # train_Convnet(DIM, SHIPS)
+    train_RL(DIM, SHIPS)
 
 
 def tournament(players):
@@ -48,7 +50,65 @@ def tournament(players):
 
     print("%s wins the tournament"%(winners[0]))
 
-def train(DIM, SHIPS):
+def train_Convnet(DIM, SHIPS):
+    """Train a convnet model.
+    :returns: None
+
+    """
+    agent = ModelConvnet("Vikram", DIM, len(SHIPS))
+    env = Environment(DIM, SHIPS, "Vikram")
+    batch_size = 1024
+    num_episodes = 90000
+
+    total_moves = 0
+
+    inputs = np.empty([batch_size, len(SHIPS)+1, DIM, DIM])
+    labels = np.empty([batch_size, DIM, DIM])
+
+    for e in range(num_episodes):
+        env.reset()
+        state = env.get_state()
+        done = False
+        batch = 0
+        total_moves = 0
+
+        for time in range(DIM*DIM):
+            action = agent.move(state)
+            total_moves += 1
+            reward, next_state = env.step(action)
+            next_input, open_locations, hit, sunk, done = next_state
+            inputs[batch, :, :, :] = next_input
+            labels[batch, :, :] = env.get_ground_truth()
+
+            if done == True:
+                if e % batch_size == 0 and e != 0:
+                    print("Episodes: {}, Avg Moves: {}".format(e,float(total_moves)/float(batch_size)))
+                    total_moves = 0
+
+                break
+            
+            if batch == batch_size:
+                agent.replay(inputs, labels)
+                batch = 0
+            
+            batch += 1
+            state = next_state
+
+        if done == False:
+            print(env.placement)
+            print(inputs,actions, hits)
+            # break
+
+
+def test():
+
+    model_random = m_random.ModelRandom("Vikram")
+    env = Environment(10, [2,3,3,4,5], "Vikram")
+
+    for i in range(90):
+        model_random.move(env)
+
+def train_RL(DIM, SHIPS):
     """Train a Q-Learning model.
     :returns: None
 

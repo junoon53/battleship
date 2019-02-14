@@ -18,6 +18,7 @@ class Environment():
         self.state = np.zeros([len(ships)+1, dim, dim], dtype='float32')
         self.placement = np.zeros([len(ships), dim, dim], dtype=int)
         self.open_locations = np.full([dim, dim], 1, 'float32')
+        self.ground_truth = np.zeros([dim, dim], dtype='float32')
         self.done = False
 
         self._place()
@@ -36,6 +37,7 @@ class Environment():
                     if np.sum(self.placement[:,row, col:col+size]) > 0:
                         continue
                     self.placement[n, row, col:col+size] = 1
+                    self.ground_truth[row, col:col+size] = 1
                     self.ship_coords[n] = ((row,col), (1,size))
                     success = True
                 else:
@@ -44,6 +46,7 @@ class Environment():
                     elif np.sum(self.placement[:,row:row+size, col]) > 0:
                         continue
                     self.placement[n,row:row+size, col] = 1
+                    self.ground_truth[row:row+size, col] = 1
                     self.ship_coords[n] = ((row,col), (size,1))
                     success = True
 
@@ -58,9 +61,14 @@ class Environment():
         self.state = np.zeros([len(self.ships)+1, dim, dim], dtype='float32')
         self.placement = np.zeros([len(self.ships), dim, dim], dtype='int')
         self.open_locations = np.full([dim, dim], 1, 'float32')
+        self.ground_truth = np.zeros([dim, dim], dtype='float32')
         self.done = False
 
         self._place()
+
+    def get_ground_truth(self):
+
+        return self.ground_truth.copy()
     
     def get_state(self):
         """Get the latest state from the environment

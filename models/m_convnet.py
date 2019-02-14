@@ -8,10 +8,10 @@ from torch.autograd import Variable
 import random
 
 
-class ModelQLearning(nn.Module):
+class ModelConvnet(nn.Module):
     def __init__(self, name, dim, num_ships):
-        super(ModelQLearning, self).__init__() 
-        """Initialize the QLearning Model
+        super(ModelConvnet, self).__init__() 
+        """Initialize the Convnet Model
         """
         self.name = name
         self.dim = dim
@@ -34,11 +34,6 @@ class ModelQLearning(nn.Module):
         self.conv3 = nn.Conv2d(64, num_ships+1, kernel_size=1, stride=1, padding=0)
         self.bn3 = nn.BatchNorm2d(num_ships+1)
         self.fc = nn.Linear(dim*dim*(num_ships+1), dim*dim) 
-
-        # torch.nn.init.xavier_uniform_(self.conv1.weight)
-        # torch.nn.init.xavier_uniform_(self.conv2.weight)
-        # torch.nn.init.xavier_uniform_(self.conv3.weight)
-        # torch.nn.init.xavier_uniform_(self.fc.weight)
 
         self.softmax = nn.LogSoftmax()
 
@@ -85,52 +80,34 @@ class ModelQLearning(nn.Module):
 
         return x,y
 
-    def calc_rewards(self, hits, total_ships_lengths):
-        ''' Calculate the discounted sume of rewards over an episode '''
-
-        gamma = self.gamma
-        board_size = self.dim**2
-
-        weighted_hits = []
-        for i,hit in enumerate(hits):
-            weighted_hit = (hit - float(total_ships_lengths - sum(hits[:i])) / float(board_size - i)) * (gamma ** i)
-            weighted_hits.append(weighted_hit)
-        weighted_rewards = []
-        for i in range(len(hits)):
-            discounted_reward = ((gamma) ** (-i)) * sum(weighted_hits[i:])
-            weighted_rewards.append(discounted_reward)
-
-        return weighted_rewards
-
-
-    def replay(self, inputs, actions, hits, total_ships_lengths):
+    def replay(self, inputs, labels):
         ''' Replay an episode and train the model '''
 
-        discounted_rewards = self.calc_rewards(hits, total_ships_lengths)
-
         optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, weight_decay=0.0001) 
+        batch_size = len(inputs)
+        minibatch_size = 64
+        samples = 0
+
         self.train()
-        for inputs, action, reward in zip(inputs, actions, discounted_rewards):
-            action_idx = action[0]*self.dim + action[1]
-            inputs = torch.Tensor(inputs).unsqueeze(0)
-            optimizer.zero_grad()
-            logits, logprobs = self.forward(inputs)
-            lr = reward*self.alpha
-            # print(lr)
 
-            loss = lr*self.criterion(logprobs, torch.LongTensor([action_idx]))
+        while samples < batch_size:
 
-            # print(loss)
+                samples += minibatch_size
+                idxs = np.random.randint(0, 1024, [minibatch_size])
+                
+                input_batch = inputs[idxs, :, :, :]
+                label_batch = labels[idxs, :, :]
+                input = torch.Tensor(input_batch)
+                labels = torch.Tensor(label_batch)
+                optimizer.zero_grad()
+                logits, logprobs = self.forward(input)
+                loss =  torch.mean(torch.sum(- labels * logprobs, 2))
 
-            loss.backward()
+                loss.backward()
 
-            optimizer.step()
-
-## decay epsilon
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *=self.epsilon_decay
+                optimizer.step()
 
     def __str__(self):
 
-        return "%s (QLearning)"%(self.name)
+        return "%s (Convnet)"%(self.name)
 
