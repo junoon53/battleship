@@ -28,7 +28,7 @@ class Game(object):
 
             action = self.players[1].move(states[0])
             reward, state = self.boards[0].step(action)
-            x, hit, sunk, done = state
+            x, open_positions, hit, sunk, done = state
             states[0] = state
 
             if done == True:
@@ -37,7 +37,7 @@ class Game(object):
 
             action = self.players[0].move(states[1])
             reward, state = self.boards[1].step(action)
-            x, hit, sunk, done = state
+            x, open_positions, hit, sunk, done = state
             states[1] = state
 
             if done == True:

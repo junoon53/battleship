@@ -32,7 +32,7 @@ class ModelHuntTarget():
 
     def move(self, state):
 
-        state, hit, sunk, done = state
+        state, open_positions, hit, sunk, done = state
 
         if self.mode == 0:
 

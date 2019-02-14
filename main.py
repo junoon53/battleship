@@ -21,18 +21,18 @@ def main():
     DIM = 5
     SHIPS = [2,2]
 
-    g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
-    g.play()
+    # g = Game(ModelHuntTarget("Vikram", DIM), ModelRandom("Betal", DIM), Environment(DIM, SHIPS, "Vikram"), Environment(DIM, SHIPS, "Betal"))
+    # g.play()
 
     # tournament([ModelHuntTarget("Vikram"),ModelHuntTarget("Sacchita"),ModelRandom("Betal")])
 
-    # train(DIM, SHIPS)
+    train(DIM, SHIPS)
 
 
 def tournament(players):
     '''Conduct a tournament between a set of players'''
     DIM = 5
-    SHIPS = [3,3,3]
+    SHIPS = [2,2]
 
     winners = players
 
@@ -74,19 +74,21 @@ def train(DIM, SHIPS):
         for time in range(500):
             action = agent.move(state)
             reward, next_state = env.step(action)
-            next_input, hit, sunk, done = next_state
+            next_input, open_locations, hit, sunk, done = next_state
+            # print(next_input)
+            # print('---')
+            if done == True:
+                # print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
+                total_moves += len(hits)
+                if e % batch_size == 0 and e != 0:
+                    print(e,float(total_moves)/float(batch_size))
+                    total_moves = 0
+                break
+
             inputs.append(next_input)
             actions.append(action)
             hits.append(hit)
             state = next_state
-            if done == True:
-                # print("episode: {}/{}, score: {}, e: {:.2}" .format(e, num_episodes, time, agent.epsilon))
-                total_moves += len(hits)
-                if e % 50 == 0 and e != 0:
-                    print(e,float(total_moves)/float(50))
-                    total_moves = 0
-                break
-
         # if len(agent.experiences) > batch_size:
         # print('replaying...')
         agent.replay(inputs, actions, hits, env.total_ships_lengths)

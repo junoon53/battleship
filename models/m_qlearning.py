@@ -54,28 +54,32 @@ class ModelQLearning(nn.Module):
         """
 
         d = self.dim
+        inputs,open_locations,_,_,_ = state
+        open_locations = open_locations.flatten()
 
         if np.random.rand() <= self.epsilon:
 
-            inputs,_,_,_ = state
-            closed_positions = (inputs[0,:,:].flatten() != 0).astype(float) 
-            idx = random.choice([ i for i in range(d*d) if closed_positions[i] == 0 ]) 
+            idx = random.choice([ i for i in range(d*d) if open_locations[i] == 1 ]) 
             x,y = divmod(idx,d)
 
         else:
 
             self.eval()
-            inputs,_,_,_ = state
-            closed_positions = (inputs[0,:,:].flatten() != 0).astype(float) * (-1001)
             inputs = torch.Tensor(inputs).unsqueeze(0)
-            preds = self.forward(inputs)[0].detach().cpu().numpy()
-            max_idx = np.argmax(preds + closed_positions)
+            preds = F.softmax(self.forward(inputs))[0].detach().numpy() + np.random.random(d*d)*1e-8
+            # print(preds)
+            # print(open_locations)
+            # print(preds)
+            max_idx = np.argmax(np.multiply(preds , open_locations))
             x,y = divmod(max_idx.item(),d)
+            # print(x,y)
+            # print('----')
 
         return x,y
 
     def calc_rewards(self, hits, total_ships_lengths):
         ''' Calculate the discounted sume of rewards over an episode '''
+        # print(len(hits), total_ships_lengths)
 
         gamma = self.gamma
         board_size = self.dim**2
@@ -98,7 +102,7 @@ class ModelQLearning(nn.Module):
         discounted_rewards = self.calc_rewards(hits, total_ships_lengths)
 
         if self.optimizer == None: 
-             self.optimizer = torch.optim.Adam(self.parameters(), lr = 0.0001) 
+             self.optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate) 
 
         self.train()
         for inputs, action, reward in zip(inputs, actions, discounted_rewards):
