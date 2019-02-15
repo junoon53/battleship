@@ -15,6 +15,7 @@ class ModelQLearning(nn.Module):
         """
         self.name = name
         self.dim = dim
+        self.device = device
 
 ## DQN Parameters
 
@@ -27,18 +28,13 @@ class ModelQLearning(nn.Module):
 
 ## Q-Function Model
 
-        self.conv1 = nn.Conv2d(num_ships+1, 32, kernel_size=3, stride=1,padding=1)
+        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1,padding=1)
         self.bn1 = nn.BatchNorm2d(32)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1)
         self.bn2 = nn.BatchNorm2d(64)
         self.conv3 = nn.Conv2d(64, num_ships+1, kernel_size=1, stride=1, padding=0)
         self.bn3 = nn.BatchNorm2d(num_ships+1)
         self.fc = nn.Linear(dim*dim*(num_ships+1), dim*dim) 
-
-        # torch.nn.init.xavier_uniform_(self.conv1.weight)
-        # torch.nn.init.xavier_uniform_(self.conv2.weight)
-        # torch.nn.init.xavier_uniform_(self.conv3.weight)
-        # torch.nn.init.xavier_uniform_(self.fc.weight)
 
         self.softmax = nn.LogSoftmax()
 
@@ -50,11 +46,8 @@ class ModelQLearning(nn.Module):
 
         """
         x = F.relu(self.bn1(self.conv1(x)))
-        # print(x.shape)
         x = F.relu(self.bn2(self.conv2(x)))
-        # print(x.shape)
         x = F.relu(self.bn3(self.conv3(x)))
-        # print(x.shape)
 
         logits = self.fc(x.view(x.size(0), -1)) 
 
@@ -76,11 +69,12 @@ class ModelQLearning(nn.Module):
 
         else:
 
-            self.eval()
-            inputs = torch.Tensor(inputs).unsqueeze(0)
+            # self.eval()
+            inputs = inputs[[0], :, :]
+            inputs = torch.Tensor(inputs).unsqueeze(0).to(self.device)
             logits, logprobs = self.forward(inputs)
-            logprobs = logprobs[0].detach().numpy() # + np.random.random(d*d)*1e-8
-            max_idx = np.argmax(logprobs + open_locations*1e25)
+            logprobs = logprobs[0].detach().cpu().numpy() # + np.random.random(d*d)*1e-8
+            max_idx = np.argmax(logprobs + open_locations*1e30)
             x,y = divmod(max_idx.item(),d)
 
         return x,y
@@ -108,17 +102,22 @@ class ModelQLearning(nn.Module):
 
         discounted_rewards = self.calc_rewards(hits, total_ships_lengths)
 
-        optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, weight_decay=0.0001) 
+        optimizer = torch.optim.Adam(self.parameters(), lr = self.learning_rate, weight_decay=0.0000) 
         self.train()
         for inputs, action, reward in zip(inputs, actions, discounted_rewards):
+
             action_idx = action[0]*self.dim + action[1]
-            inputs = torch.Tensor(inputs).unsqueeze(0)
+            action_idx = torch.LongTensor([action_idx]).to(self.device)
+
+            inputs = inputs[[0], :, :]
+            inputs = torch.Tensor(inputs).unsqueeze(0).to(self.device)
+            # print(inputs.size())
             optimizer.zero_grad()
             logits, logprobs = self.forward(inputs)
             lr = reward*self.alpha
             # print(lr)
 
-            loss = lr*self.criterion(logprobs, torch.LongTensor([action_idx]))
+            loss = lr*self.criterion(logprobs, action_idx)
 
             # print(loss)
 
